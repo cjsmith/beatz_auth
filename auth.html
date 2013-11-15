@@ -1,0 +1,115 @@
+<html>
+<head>
+  <title>auth beatz</title>
+</head>
+<body style="font-family:helvetica;">
+  <button onclick="reset()">Reset</button>
+  <div id="sign_up">
+  <button onclick="signup()">Save and sign up</button>
+    Think of your favourite beat in your head.  Once you have it, tap the first four beats of it into the box below.
+  </div>
+  <div id="login">
+    Please enter your secret beatz code.
+  </div>
+  <button onclick="submit()">Submit</button>
+  <div id="beat_pad" style="display:inline-block;background:blue;width:100px;height:100px;" onclick="processBeatz()"/>
+  <script>
+    var ctx = new(window.audioContext || window.webkitAudioContext);
+    var beep = function () {
+
+            type = 1;
+
+            if (typeof finishedCallback != "function") {
+                finishedCallback = function () {};
+            }
+
+            var osc = ctx.createOscillator();
+
+            osc.type = type;
+
+            osc.connect(ctx.destination);
+            osc.noteOn(0);
+
+            setTimeout(function () {
+                osc.noteOff(0);
+                finishedCallback();
+             }, 50);
+    };
+    var signature = [];
+    var startTime;
+    var setColour = function (elem, colour) {
+        elem.setAttribute('style', 'background:' + colour + ';width:100px;height:100px');
+    };
+    var reset = function() {
+       signature = [];
+    };
+    var submit = function() {
+        localStorage.signature = lastSignature;
+    }; 
+    var within = function(x, y, tolerance) {
+        if ((x > (y-tolerance)) && (x < (y+tolerance))) {
+            return true;
+        } 
+    };
+    var signatureMatches = function(signature) {
+
+        if (!localStorage.signature) {
+            return false;
+        } 
+        console.log(signature);
+        savedSigs = localStorage.signature.split(',');
+        console.log(savedSigs);
+        var i;
+        for (i=0; i<5; i++) {
+          var curSig = signature[i];
+          var savedSig = parseInt(savedSigs[i]);
+          console.log('comparing ' + curSig + ' to ' + savedSig);
+          if (!within(curSig, savedSig, 100)) {
+            return false; 
+          }     
+        }
+        return true;
+    };
+    var processBeatz = function() {
+       beep();
+       if (signature.length == 0) {
+          startTime = new Date().getTime();
+       }
+       signature.push(new Date().getTime() - startTime);
+       if (signature.length == 5) {
+            lastSignature = signature;
+            if (signatureMatches(lastSignature)) {
+              console.log('matches');
+            } else {
+              console.log('doesnt');
+            }
+            console.log(signature);
+            reset();
+            setColour(elem('beat_pad'), 'blue');
+        }
+       setColour(elem('beat_pad'), 'white');
+        setTimeout(function() {
+          setColour(elem('beat_pad'), 'red');
+        }, 50);
+    }
+
+    var elem = function(id)  {
+      return document.getElementById(id)
+    }
+    var show = function(id) {
+        elem(id).setAttribute("style", 'display:inline;');
+    }
+    var hide = function(id) {
+        elem(id).setAttribute("style", 'display:none;');
+    }
+    if (!localStorage.authkey) {
+        show('sign_up');
+        hide('login');
+    } else {
+        hide('sign_up');
+        show('login');
+    }
+  </script>
+</body>
+</html>
+
